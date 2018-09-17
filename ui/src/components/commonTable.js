@@ -126,6 +126,7 @@ class CommonTable extends Component{
 
     render(){
         const store=this.props.rootStore.commonStore;
+        console.log(store);
         return (
             <div style={{height: "100%"}}>
                 <Modal visible={store.createFormVisible}

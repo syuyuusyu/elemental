@@ -4,7 +4,6 @@
   "description": "地矿综合集成服务",
   "private": true,
   "dependencies": {
-    "amqp": "^0.2.7",
     "egg": "^2.10.0",
     "egg-cors": "^2.1.0",
     "egg-mysql": "^3.0.0",

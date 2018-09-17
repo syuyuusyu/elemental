@@ -21,11 +21,6 @@ class Inital extends Subscription {
             await this.app.redis.del(key);
         }
 
-
-        // 初始化接口调用实体
-        //app.invokeEntitys = await app.mysql.query('select * from t_invoke_info');
-        await ctx.service.redis.set('invokeEntitys',await this.app.mysql.query('select * from t_invoke_info'));
-
         this.app.logger.info('Inital end');
 
 

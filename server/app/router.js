@@ -26,13 +26,6 @@ module.exports = app => {
     router.get('/invokeInfo/groupName', controller.restful.groupName);
 
 
-
-
-    // 获取菜单
-    // 根据父节点ID和当前角色获取子菜单
-    router.get('/menu/currentMenu/:parentId', controller.menu.currentMenu);
-    // 获取当前角色下的所有菜单
-    router.get('/menu/currentRoleMenu/', controller.menu.currentRoleMenu);
     // 对应角色的完整菜单树
     router.get('/menu/menuTree', controller.menu.menuTree);
 
@@ -48,7 +41,7 @@ module.exports = app => {
     router.get('/entity/deleteConfig/:tableName/:idField/:id',controller.entity.deleteConfig);
     router.get('/entity/monyToMonys',controller.entity.monyToMonys);
     router.post('/entity/query/:entityId',controller.entity.query);
-    router.get('/entity/topParentId/:entityId',controller.entity.topParentId);
+    router.get('/entity/topParentRecord/:entityId',controller.entity.topParentRecord);
     router.post('/entity/queryCandidate/:columnId',controller.entity.queryCandidate);
     router.get('/entity/checkUnique/:entityId/:checkField/:value',controller.entity.checkUnique);
     router.post('/entity/saveEntity/:entityId',controller.entity.saveEntity);

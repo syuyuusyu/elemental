@@ -78,7 +78,7 @@ class RestfulService extends Service{
         if(entity.next && result[invokeName].result.map ){
             recursionLevel++;
             const invokeEntitys=await this.ctx.service.redis.get('invokeEntitys');
-            let nextEntitys=//await this.app.mysql.select('t_invoke_info',{where: {  id: entity.next.split(',') }});
+            let nextEntitys=//await this.app.mysql.select('invoke_info',{where: {  id: entity.next.split(',') }});
                     invokeEntitys.filter(d=>{
                         let flag=false;
                         entity.next.split(',').forEach(i=>{
@@ -122,6 +122,12 @@ class RestfulService extends Service{
             params.push(p1);
         });
         return params;
+    }
+
+    async reflashEntity(){
+        console.log('reflashEntity');
+        const invokeEntitys=await this.app.mysql.query('select * from invoke_info');
+        this.app.messenger.sendToAgent('invokeEntitys',invokeEntitys);
     }
 
 

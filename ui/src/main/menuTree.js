@@ -4,7 +4,6 @@ import { inject, observer, } from 'mobx-react';
 import { configure } from 'mobx';
 import { Link, } from 'react-router-dom';
 const SubMenu = Menu.SubMenu;
-//const MenuItemGroup = Menu.ItemGroup;
 
 configure({ enforceActions: true });
 
@@ -13,7 +12,7 @@ configure({ enforceActions: true });
 class MenuTree extends Component {
 
   componentDidMount() {
-    this.props.rootStore.treeStore.loadMenuTree();
+
   }
 
 

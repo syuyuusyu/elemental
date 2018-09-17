@@ -15,8 +15,8 @@ class RestfulController extends Controller{
         let wherecount=(invokeName && !/\s/.test(invokeName))?`where name='${invokeName}'`:'where 1=1';
         wherecount=wherecount+((groupName && !/\s/.test(groupName))?` and groupname='${groupName}'`:'');
         let result={};
-        let [{total}]=await this.app.mysql.query(`select count(1) total from t_invoke_info ${wherecount}`, []);
-        let [...content]=await this.app.mysql.select('t_invoke_info',{
+        let [{total}]=await this.app.mysql.query(`select count(1) total from invoke_info ${wherecount}`, []);
+        let [...content]=await this.app.mysql.select('invoke_info',{
             limit: limit,
             offset: start,
             where
@@ -31,18 +31,18 @@ class RestfulController extends Controller{
         if(!entity.next) entity.next=null;
         let result={};
         if(entity.id){
-            result = await this.app.mysql.update('t_invoke_info', entity);
+            result = await this.app.mysql.update('invoke_info', entity);
         }else {
-            result = await this.app.mysql.insert('t_invoke_info', entity); // 更新 posts 表中的记录
+            result = await this.app.mysql.insert('invoke_info', entity); // 更新 posts 表中的记录
         }
         // 判断更新成功
         const updateSuccess = result.affectedRows === 1;
-        this.reflashEntity();
         this.ctx.body={success:updateSuccess};
+        this.ctx.setvice.restful.reflashEntity();
     }
 
     async invokes(){
-        this.ctx.body=await this.app.mysql.select('t_invoke_info',{});
+        this.ctx.body=await this.app.mysql.select('invoke_info',{});
     }
 
     async test(){
@@ -50,69 +50,12 @@ class RestfulController extends Controller{
         this.ctx.body=await this.service.restful.invoke(entity,entity.queryMap);
     }
 
-    async invoke2(){
-        let result=[];
-        const authorToken=this.ctx.request.header['access-token'];
-        let {user}=await this.ctx.service.authorService.getByCode(authorToken);
-        try{
-            const queryMap=this.ctx.request.body;
-            const invokeEntitys=await this.ctx.service.redis.get('invokeEntitys');
-            const [entity]=invokeEntitys.filter(d=>d.name===this.ctx.params.invokeName);
-            //await this.app.mysql.select('t_invoke_info',{where: {  name: this.ctx.params.invokeName}});
-
-            let nextEntitys=invokeEntitys.filter(d=>{
-                let flag=false;
-                entity.next.split(',').forEach(i=>{
-                    if(i===d.id+''){
-                        flag=true;
-                    }
-                });
-                return flag;
-            });
-            let promises=nextEntitys.map(entity=>this.service.restful.invoke(entity,queryMap));
-            let p=await Promise.all(promises);
-
-            for(let r of p){
-                const cur={};
-                for(let invokeName in r){
-                    if(invokeName==='msg' || invokeName==='success'){
-                        continue;
-                    }
-                    cur[invokeName]=r[invokeName].result;
-                }
-                result.push(cur);
-            }
-            //this.ctx.logger.info('集成就调用结果:',result);
-            if(entity.parseFun && !queryMap.doNotParse){
-                try {
-                    let fn=evil(entity.parseFun);
-                    result=fn(result);
-
-                }catch (e){
-                    this.ctx.logger.error('解析函数运行失败');
-                    this.ctx.logger.info(e);
-                }
-            }else{
-
-            }
-            //this.ctx.logger.info('运行解析函数后结果',result);
-            //缓存当次结果
-            this.app.redis.set(user.user_name+this.ctx.params.invokeName,JSON.stringify(result));
-        }catch (exp){
-            this.ctx.logger.error('调用接口失败,通过缓存获取数据');
-            this.ctx.logger.info('调用接口失败',exp.toString());
-            result= await this.service.authorService.getByCode(user.user_name+this.ctx.params.invokeName);
-        }
-
-        this.ctx.body=result;
-    }
-
     async invoke(){
         let result=[];
         const queryMap=this.ctx.request.body;
-        const invokeEntitys=await this.ctx.service.redis.get('invokeEntitys');
+        const invokeEntitys=this.app.invokeEntitys;
         const [entity]=invokeEntitys.filter(d=>d.name===this.ctx.params.invokeName);
-        //await this.app.mysql.select('t_invoke_info',{where: {  name: this.ctx.params.invokeName}});
+        //await this.app.mysql.select('invoke_info',{where: {  name: this.ctx.params.invokeName}});
 
         let nextEntitys=invokeEntitys.filter(d=>{
             let flag=false;
@@ -167,7 +110,7 @@ class RestfulController extends Controller{
     }
 
     async delete(){
-        const result = await this.app.mysql.delete('t_invoke_info', {
+        const result = await this.app.mysql.delete('invoke_info', {
             id: this.ctx.params.id
         });
         const updateSuccess = result.affectedRows === 1;
@@ -176,18 +119,14 @@ class RestfulController extends Controller{
     }
 
     async checkUnique(){
-        let [{total}]=await this.app.mysql.query('select count(1) total from t_invoke_info where name=?' ,[this.ctx.params.invokeName]);
+        let [{total}]=await this.app.mysql.query('select count(1) total from invoke_info where name=?' ,[this.ctx.params.invokeName]);
         this.ctx.body={total}
     }
 
-    async reflashEntity(){
-        console.log('reflashEntity');
-        //this.app.invokeEntitys=await this.app.mysql.query('select * from t_invoke_info');
-        this.ctx.service.redis.set('invokeEntitys',await this.app.mysql.query('select * from t_invoke_info'));
-    }
+
 
     async groupName(){
-        this.ctx.body= await this.app.mysql.query(`select distinct groupName from t_invoke_info`);
+        this.ctx.body= await this.app.mysql.query(`select distinct groupName from invoke_info`);
     }
 
 }

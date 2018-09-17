@@ -1,5 +1,3 @@
-const amqp = require('amqp');
-
 module.exports = agent => {
 
 
@@ -7,20 +5,9 @@ module.exports = agent => {
         agent.logger.info('egg-ready');
 
         agent.messenger.on('entityCache',data=>agent.messenger.sendToApp('entityCache', data));
+        agent.messenger.on('invokeEntitys',data=>agent.messenger.sendToApp('invokeEntitys', data));
 
-        const rabbitmqUrl = agent.config.self.rabbitmqUrl;
-        const queueName = agent.config.self.queueName;
-        const connection = amqp.createConnection({url: rabbitmqUrl});
-        const exchangeName = '';
-        connection.once('ready', () => {
-            agent.logger.info('connection ready');
-            const exchange = connection.exchange(exchangeName, {type: 'direct', autoDelete: false});
-            agent.messenger.on('rabbitmqMsg', data => {
-                agent.logger.info('rabbitmqMsg');
-                agent.logger.info(data);
-                exchange.publish(queueName, data);
-            });
-        });
+
 
     });
 

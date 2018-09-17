@@ -43,10 +43,7 @@ class Login extends React.Component {
                     sessionStorage.setItem('roles',JSON.stringify(json.roles));
                     this.props.rootStore.authorityStore.toggleAlertMessageVisible();
                     await Promise.all([
-                        this.props.rootStore.authorityStore.loadAllbuttons(),
-                        this.props.rootStore.treeStore.initRoot(),
-                        this.props.rootStore.notificationStore.loadSystemAccess(),
-                        this.props.rootStore.activitiStore.loadCurrentTask()
+
                     ]);
                     this.store.taggreLogin();
                     //setTimeout(()=>{;},5000);

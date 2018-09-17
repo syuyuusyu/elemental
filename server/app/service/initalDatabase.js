@@ -1,5 +1,5 @@
 const Service = require('egg').Service;
-const {smartQuery, lowCaseResult} = require('../util');
+
 
 class InitalDataBase extends Service {
 
@@ -14,9 +14,9 @@ class InitalDataBase extends Service {
     }
 
     async invokeInfo() {
-        const databaseName = app.config.mysql.client.database;
-        let [{total}] = await app.mysql.query(`select count(1) total
-          from information_schema.COLUMNS where TABLE_SCHEMA=${databaseName} and table_name='invoke_info'`)
+        const databaseName = this.app.config.mysql.client.database;
+        let [{total}] = await this.app.mysql.query(`select count(1) total
+          from information_schema.COLUMNS where TABLE_SCHEMA='${databaseName}' and table_name='invoke_info'`);
         if (total === 0) {
             let sql = `
           CREATE TABLE invoke_info (
@@ -35,15 +35,15 @@ class InitalDataBase extends Service {
             PRIMARY KEY (id)
           ) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT;
           `
-            await app.mysql.query(sql);
+            await this.app.mysql.query(sql);
         }
 
     }
 
     async entity() {
-        const databaseName = app.config.mysql.client.database;
-        let [{total}] = await app.mysql.query(`select count(1) total
-          from information_schema.COLUMNS where TABLE_SCHEMA=${databaseName} and table_name='entity'`)
+        const databaseName = this.app.config.mysql.client.database;
+        let [{total}] = await this.app.mysql.query(`select count(1) total
+          from information_schema.COLUMNS where TABLE_SCHEMA='${databaseName}' and table_name='entity'`)
         if (total === 0) {
             let sql = `
             CREATE TABLE \`entity\`  (
@@ -61,14 +61,14 @@ class InitalDataBase extends Service {
               PRIMARY KEY (\`id\`) USING BTREE
             ) ENGINE = InnoDB AUTO_INCREMENT = 1029 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
           `
-            await app.mysql.query(sql);
+            await this.app.mysql.query(sql);
         }
     }
 
     async entityColumn() {
-        const databaseName = app.config.mysql.client.database;
-        let [{total}] = await app.mysql.query(`select count(1) total
-          from information_schema.COLUMNS where TABLE_SCHEMA=${databaseName} and table_name='invoke_info'`)
+        const databaseName = this.app.config.mysql.client.database;
+        let [{total}] = await this.app.mysql.query(`select count(1) total
+          from information_schema.COLUMNS where TABLE_SCHEMA='${databaseName}' and table_name='invoke_info'`)
         if (total === 0) {
             let sql = `
                 CREATE TABLE \`entity_column\`  (
@@ -93,15 +93,15 @@ class InitalDataBase extends Service {
               INDEX \`entityId\`(\`entityId\`) USING BTREE,
               INDEX \`column_entityName\`(\`tableName\`) USING BTREE
             ) ENGINE = InnoDB AUTO_INCREMENT = 963 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
-          `
-            await app.mysql.query(sql);
+          `;
+            await this.app.mysql.query(sql);
         }
     }
 
     async monyToMony() {
-        const databaseName = app.config.mysql.client.database;
-        let [{total}] = await app.mysql.query(`select count(1) total
-          from information_schema.COLUMNS where TABLE_SCHEMA=${databaseName} and table_name='invoke_info'`)
+        const databaseName = this.app.config.mysql.client.database;
+        let [{total}] = await this.app.mysql.query(`select count(1) total
+          from information_schema.COLUMNS where TABLE_SCHEMA='${databaseName}' and table_name='invoke_info'`)
         if (total === 0) {
             let sql = `
              CREATE TABLE \`entity_mony_to_mony\`  (
@@ -114,15 +114,15 @@ class InitalDataBase extends Service {
               \`relationTable\` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '关联表名称',
               PRIMARY KEY (\`id\`) USING BTREE
             ) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
-          `
-            await app.mysql.query(sql);
+          `;
+            await this.app.mysql.query(sql);
         }
     }
 
     async entityDictionary() {
-        const databaseName = app.config.mysql.client.database;
-        let [{total}] = await app.mysql.query(`select count(1) total
-          from information_schema.COLUMNS where TABLE_SCHEMA=${databaseName} and table_name='invoke_info'`)
+        const databaseName = this.app.config.mysql.client.database;
+        let [{total}] = await this.app.mysql.query(`select count(1) total
+          from information_schema.COLUMNS where TABLE_SCHEMA='${databaseName}' and table_name='invoke_info'`)
         if (total === 0) {
             let sql = `
             CREATE TABLE \`entity_dictionary\`  (
@@ -133,15 +133,15 @@ class InitalDataBase extends Service {
               \`value\` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
               PRIMARY KEY (\`id\`) USING BTREE
             ) ENGINE = InnoDB AUTO_INCREMENT = 123 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
-          `
-            await app.mysql.query(sql);
+          `;
+            await this.app.mysql.query(sql);
         }
     }
 
     async entityOperation() {
-        const databaseName = app.config.mysql.client.database;
-        let [{total}] = await app.mysql.query(`select count(1) total
-          from information_schema.COLUMNS where TABLE_SCHEMA=${databaseName} and table_name='invoke_info'`)
+        const databaseName = this.app.config.mysql.client.database;
+        let [{total}] = await this.app.mysql.query(`select count(1) total
+          from information_schema.COLUMNS where TABLE_SCHEMA='${databaseName}' and table_name='invoke_info'`)
         if (total === 0) {
             let sql = `
             CREATE TABLE \`entity_operation\`  (
@@ -156,11 +156,11 @@ class InitalDataBase extends Service {
               \`function\` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL,
               PRIMARY KEY (\`id\`) USING BTREE
             ) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
-          `
-            await app.mysql.query(sql);
+          `;
+            await this.app.mysql.query(sql);
         }
     }
 
 }
 
-exports = InitalDataBase;
+module.exports = InitalDataBase;

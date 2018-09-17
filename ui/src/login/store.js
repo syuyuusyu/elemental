@@ -36,14 +36,6 @@ export default class AuthorityStore {
     this.loginVisible = !this.loginVisible;
   };
 
-  loadAllbuttons = async () => {
-    const json = await get(`${baseUrl}/btn/allButtons`);
-    const allButtons = {};
-    json.forEach((b) => {
-      allButtons[b.id] = b;
-    });
-    sessionStorage.setItem('buttons', JSON.stringify(allButtons));
-  };
 
   @action
   toggleRegFormVisible=()=>{

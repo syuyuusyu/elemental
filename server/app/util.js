@@ -12,22 +12,24 @@ const isArrsy=function(v){
     return toString.call(v)=="[object Array]";
 };
 
-Array.prototype.indexOf = Array.prototype.indexOf ? Array.prototype.indexOf
-    : function(o, from)  {
-        from = from || 0;
-        var len = this.length;
-        from += (from < 0) ? len : 0;
-        for (; from < len; from++) {
-            if (this[from] === o)
-                return from;
-        }
-        return -1;
-    };
+// Array.prototype.indexOf = Array.prototype.indexOf ? Array.prototype.indexOf
+//     : function(o, from)  {
+//         from = from || 0;
+//         var len = this.length;
+//         from += (from < 0) ? len : 0;
+//         for (; from < len; from++) {
+//             if (this[from] === o)
+//                 return from;
+//         }
+//         return -1;
+//     };
 
 Array.prototype.remove = Array.prototype.remove ? Array.prototype.remove
     : function(o)  {
+        console.log('reomve');
         let index = this.indexOf(o);
         if (index != -1) {
+            console.log(index);
             this.splice(index, 1);
         }
     };
@@ -94,9 +96,10 @@ function smartQuery(target, name, descriptor) {
             return new Promise(function(resolve, reject){
                 resolve(oldValue.apply(_this, arg));
 
-            }).then(function(){
+            }).then(function(response){
                 _this.app.mysql.query=_oquery;
                 _this.app.mysql.modify=false;
+                return response;
             });
 
         })(this,arguments,oldquery)
@@ -176,4 +179,39 @@ function _lowCaseArray(arr){
 }
 
 
-module.exports={smartQuery,lowCaseResult,lowCaseResponseBody};
+function careateTree(array,idField,pidField,topId) {
+    function _tree(arr) {
+        const leafArray=[];
+        arr.forEach(_=>{
+            if(arr.filter(a=>a[pidField]===_[idField]).length===0){
+                leafArray.push(_);
+            }
+        });
+        leafArray.map(rm=>({id:rm.id,pid:rm.parent_id,text:rm.text})).forEach(d=>console.log(d));
+        if(leafArray.findIndex(_=>_[pidField]==topId)===-1){
+            console.log(arr.remove);
+            leafArray.forEach(_=>arr.remove(_));
+            leafArray.forEach(_=>{
+                for(let i=0;i<arr.length;i++){
+                    if(arr[i][idField]===_[pidField]){
+                        if(!arr[i].children){
+                            arr[i].children=[];
+                        }
+                        console.log(2222,_);
+                        arr[i].children.push(_);
+                    }
+                }
+            });
+            _tree(arr);
+        }
+    }
+    _tree(array);
+    //console.log(array);
+    return array;
+
+}
+
+
+
+
+module.exports={smartQuery,lowCaseResult,lowCaseResponseBody,careateTree};

@@ -14,21 +14,27 @@ module.exports = app => {
 
         app.mysql.modify=false;
         //初始化数据库
-        ctx.service.initalDatabase.inital();
+        await ctx.service.initalDatabase.inital();
 
         app.logger.info('app started!!!!');
+
     });
 
     app.once('server', async server => {
         const ctx = app.createAnonymousContext();
         //实体配置缓存
         await ctx.service.entity.entityCache();
+        //接口调用缓存
+        await ctx.service.restful.reflashEntity();
     });
 
     //实体配置信息缓存
-    app.messenger.on('entityCache', data => {
-        console.log('entityCache');
+    app.messenger.on('entityCache', async data => {
         app.entityCache=data;
+    });
+
+    app.messenger.on('invokeEntitys', data => {
+        app.invokeEntitys=data;
     });
 };
 
