@@ -19,7 +19,10 @@ class OperationTable extends Component {
     columns = [
         {dataIndex: 'name', title: '操作名称', width: 120,},
         {
-            dataIndex: 'icon', title: '图标', width: 50
+            dataIndex: 'icon', title: '图标', width: 50,
+            render:(text)=>{
+                return <Icon type={text}/>
+            }
         },
         {
             dataIndex: 'type', title: '类型', width: 100,

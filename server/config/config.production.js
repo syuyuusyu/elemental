@@ -16,15 +16,14 @@ module.exports = appInfo => {
         'author',
     ];
 
-    config.author={
-        ignore:/^\/invoke/,
+    config.author = {
+        ignore: /^\/invoke|^\/login/,
     };
-
 
 
     config.multipart = {
         //fileExtensions: ['.jar'],
-        whitelist:fileName=>true,
+        whitelist: fileName => true,
         fileSize: '5120mb',
     };
 
@@ -48,6 +47,24 @@ module.exports = appInfo => {
         agent: false,
     };
 
+    // config.mysql = {
+    //     client: {
+    //         // host
+    //         host: '10.10.12.1',
+    //         // 端口号
+    //         port: '3306',
+    //         // 用户名
+    //         user: 'isp',
+    //         // 密码
+    //         password: 'liuge1',
+    //         // 数据库名
+    //         database: 'isp',
+    //     },
+    //     // 是否加载到 app 上，默认开启
+    //     app: true,
+    //     // 是否加载到 agent 上，默认关闭
+    //     agent: false,
+    // };
 
 
     config.redis = {
@@ -75,11 +92,9 @@ module.exports = appInfo => {
         credentials: true
     };
 
-    config.self={
+    config.self = {};
 
-    };
-
-    config.discription='local';
+    config.discription = 'local';
 
     return config;
 

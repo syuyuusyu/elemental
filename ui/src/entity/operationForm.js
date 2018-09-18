@@ -56,7 +56,7 @@ class OperationForm extends React.Component {
 
         });
         store.toggleOperationFormVisible();
-        store.loadEntityOperations();
+        store.loadEntityOperations.defer()(1000);
     };
 
     typeSelect=(value)=>{

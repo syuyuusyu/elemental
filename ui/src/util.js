@@ -63,6 +63,15 @@ Function.prototype.callInstance=function(obj){
     }
 };
 
+
+Function.prototype.defer=function(){
+    var method=this;
+    var arg=arguments;
+    return function(time){
+        setTimeout(()=>method.apply(this,arg),time);
+    }
+};
+
 export const format = (txt, compress) => {
 
     var indentChar = '    ';
