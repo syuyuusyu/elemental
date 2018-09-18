@@ -187,7 +187,6 @@ function careateTree(array,idField,pidField,topId) {
                 leafArray.push(_);
             }
         });
-        leafArray.map(rm=>({id:rm.id,pid:rm.parent_id,text:rm.text})).forEach(d=>console.log(d));
         if(leafArray.findIndex(_=>_[pidField]==topId)===-1){
             console.log(arr.remove);
             leafArray.forEach(_=>arr.remove(_));

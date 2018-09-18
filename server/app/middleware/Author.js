@@ -4,7 +4,7 @@ module.exports = (options,app) => {
     return async function author(ctx, next) {
         ctx.logger.info('author');
         const token=ctx.request.header['access-token'];
-        const author=await ctx.service.authorService.getByCode(token);
+        const author=await ctx.service.redis.get(token);
         if((token && author) ){
             await next();
         }else{

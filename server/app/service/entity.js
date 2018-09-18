@@ -251,6 +251,7 @@ class EntityService extends Service{
             targetIdField,r_srcIdField,
             r_targetIdField,targetDeleteFlagField}
             =this.relevantInfo(entityId,monyToMonyId);
+        console.log(success);
         if(!success){
             return {success};
         }

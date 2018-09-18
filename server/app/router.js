@@ -10,6 +10,7 @@ module.exports = app => {
     router.post('/login', controller.home.login);
     // 退出
     router.get('/logout', controller.home.logout);
+    router.get('/resetPassword',controller.home.resetPassword);
 
     // 接口调用
     router.get('/invokeEntityInfo', controller.restful.toPage);
@@ -18,10 +19,7 @@ module.exports = app => {
     router.post('/invokeInfo/test', controller.restful.test);
     router.post('/invokeInfo/save', controller.restful.save);
     router.delete('/invokeInfo/delete/:id', controller.restful.delete);
-
-
     router.post('/invoke/:invokeName', controller.restful.invoke);
-
     router.get('/invokeInfo/checkUnique/:invokeName', controller.restful.checkUnique);
     router.get('/invokeInfo/groupName', controller.restful.groupName);
 
@@ -46,6 +44,8 @@ module.exports = app => {
     router.get('/entity/checkUnique/:entityId/:checkField/:value',controller.entity.checkUnique);
     router.post('/entity/saveEntity/:entityId',controller.entity.saveEntity);
     router.get('/entity/deleteEntity/:entityId/:id',controller.entity.deleteEntity);
+    router.get('/entity/queryRelevant/:entityId/:monyToMonyId/:recordId',controller.entity.queryRelevant);
+    router.post('/entity/saveRelevant/:entityId/:monyToMonyId',controller.entity.saveRelevant);
 
     //字典配置
     router.get('/dictionary/allDictionary',controller.dictionary.allDictionary);

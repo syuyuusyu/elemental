@@ -21,6 +21,9 @@ class EntityTable extends Component {
 
     columns = [
         {
+            dataIndex: 'id', title: 'ID', width: 50
+        },
+        {
             dataIndex: 'tableName', title: '表名', width: 80
         },
         {dataIndex: 'entityCode', title: '编码', width: 80,},
@@ -51,7 +54,7 @@ class EntityTable extends Component {
         {dataIndex: 'pidField', title: '父ID字段', width: 80,},
         {
             title: '操作',
-            width: 320,
+            width: 340,
             render: (text, record) => {
                 return (
                     <span>

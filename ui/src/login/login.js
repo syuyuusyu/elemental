@@ -41,9 +41,8 @@ class Login extends React.Component {
                     sessionStorage.setItem('currentUserName', json.user.name);
                     sessionStorage.setItem('user', JSON.stringify(json.user));
                     sessionStorage.setItem('roles',JSON.stringify(json.roles));
-                    this.props.rootStore.authorityStore.toggleAlertMessageVisible();
                     await Promise.all([
-
+                        this.props.rootStore.treeStore.loadMenuTree()
                     ]);
                     this.store.taggreLogin();
                     //setTimeout(()=>{;},5000);
@@ -79,7 +78,7 @@ class Login extends React.Component {
                     <Form className="login-form">
                         <div className="logo-title">
                             <img src={Logo} alt="logo" />
-                            <h3>云南地质大数据服务平台统一门户</h3>
+                            <h3>Elemental</h3>
                         </div>
                         <Row>
                             <FormItem label="用户名" className="user-name">
@@ -97,18 +96,11 @@ class Login extends React.Component {
                                 })
                                 (<Input onPressEnter={this.login} prefix={<Icon type="lock" />} type="password" autoComplete="password" placeholder="请输入密码" />)}
                             </FormItem>
-                            {/*        <Row>
-                <Col span={25} style={{ textAlign: 'center' }}>
-                  <Checkbox>记住我</Checkbox>
-                </Col>
-              </Row>*/}
                         </Row>
                         <Row >
                             <Col span={25}  >
                                 <Button type="primary" icon="login" className="login-button" onClick={this.login}>登录</Button>
                                 &nbsp; 没有账号，请先<Link to="/register">注册</Link>
-                                {/* <Button icon="reload" onClick={this.handleReset}>我要休息</Button> */}
-                                {/* <Button icon="user" onClick={this.store.toggleRegFormVisible}>注册</Button>*/}
                             </Col>
                         </Row>
                     </Form>

@@ -42,12 +42,5 @@ export default class AuthorityStore {
     this.regFormVisible=!this.regFormVisible;
   };
 
-  @observable
-  alertMessageVisible=false;
-
-  @action
-  toggleAlertMessageVisible=()=>{
-      this.alertMessageVisible=!this.alertMessageVisible;
-  }
 
 }

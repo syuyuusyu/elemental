@@ -11,19 +11,16 @@ class MenuController extends Controller{
 
     async menuTree() {
         const token =this.ctx.request.header['access-token'];
-        const {roles,user}=await this.service.authorService.getAuthor(token);
-        console.log(user);
+        const {roles,user}=await this.service.redis.get(token);
         let tree=[];
         if(roles.length>0){
             tree=await this.app.mysql.query(this.roleMenuSql,[1,roles.map(r=>r.id)]);
             await this._menuTree(tree,user,roles);
         }
-        console.log(tree);
         this.ctx.body=tree;
     }
 
     async _menuTree(tree,user,roles){
-
         for(let i=0;i<tree.length;i++){
             const current=await this.app.mysql.query(this.roleMenuSql,[tree[i].id,roles.map(r=>r.id)]);
             if(current && current.length>0){
@@ -35,8 +32,6 @@ class MenuController extends Controller{
             }
         }
     }
-
-
 
 }
 

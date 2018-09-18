@@ -35,10 +35,18 @@ class HomeController extends Controller {
 
     async logout() {
         const token = this.ctx.request.header['access-token'];
-        const auth = await this.service.authorService.getAuthor(token);
+        const auth = await this.service.redis.get(token);
         this.app.redis.del(token);
         this.ctx.body={};
 
+    }
+
+    async resetPassword(){
+        let token=this.ctx.request.header['access-token'];
+        let {user}=await this.service.redis.get(token);
+        let result=await this.app.mysql.query(`update t_user set passwd=password('123456') where id=${user.id}`);
+        const updateSuccess = result.affectedRows === 1;
+        this.ctx.body={success:updateSuccess};
     }
 }
 
