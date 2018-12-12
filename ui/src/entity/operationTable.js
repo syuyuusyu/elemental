@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import { Divider, Popconfirm, Table, Modal, Row, Col,Button,Drawer,Select,notification} from 'antd';
+import { Divider, Popconfirm,Icon, Table, Modal, Row, Col,Button,Drawer,Select,notification} from 'antd';
 import {inject, observer} from 'mobx-react';
 import {baseUrl, get} from '../util';
 import OperationForm from './operationForm';
@@ -37,7 +37,18 @@ class OperationTable extends Component {
                 }
             }
         },
-        {dataIndex: 'pagePath', title: '类所在目录', width: 120,},
+        {
+            dataIndex: 'location', title: '按钮位置', width: 100,
+            render:(text)=>{
+                switch (text){
+                    case '1':
+                        return '位于表头';
+                    case '2':
+                        return '位于每一行';
+                }
+            }
+        },
+        {dataIndex: 'pagePath', title: '类所在目录', width: 220,},
         {dataIndex: 'pageClass', title: '页面类名', width: 120,},
         {
             dataIndex: 'monyToMonyId', title: '关系名称', width: 120,
@@ -53,7 +64,7 @@ class OperationTable extends Component {
         },
         {
             title: '操作',
-            width: 320,
+            width: 180,
             render: (text, record) => {
                 return (
                     <span>

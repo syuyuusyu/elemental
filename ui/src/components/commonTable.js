@@ -110,7 +110,7 @@ class CommonTable extends Component{
             return (
                 <Modal visible={store.operationVisible[op.id]}
                        key={op.id}
-                       width={400}
+                       width={900}
                        title={op.name}
                        footer={null}
                        onCancel={store.toggleOperationVisible(op.id)}
@@ -126,7 +126,6 @@ class CommonTable extends Component{
 
     render(){
         const store=this.props.rootStore.commonStore;
-        console.log(store);
         return (
             <div style={{height: "100%"}}>
                 <Modal visible={store.createFormVisible}
@@ -146,9 +145,9 @@ class CommonTable extends Component{
                        columns={store.columns.filter(d=>d)}
                        rowKey={record => record[store.currentEntity.idField]}
                        dataSource={store.tableRows.filter(d => d)}
-                       rowSelection={null}
+                       rowSelection={this.props.canSelectRows?{selectedRowKeys:store.selectedRowKeys,onChange:store.onSelectRows}:null}
                        size="small"
-                       scroll={{y: 800,x:1440}}
+                       scroll={{y: 800,x:store.hasParent?1080:1340}}
                        pagination={store.pagination}
                        loading={store.loading}
                        expandedRowRender={store.allColumns.filter(c=>c.entityId===store.currentEntity.id && c.columnType==='text').length>0?

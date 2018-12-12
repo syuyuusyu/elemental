@@ -98,6 +98,14 @@ export class CommonStore {
     //--------------------
 
     @observable
+    selectedRowKeys=[];
+
+    @action
+    onSelectRows=(selectedRowKeys)=>{
+        this.selectedRowKeys=selectedRowKeys;
+    };
+
+    @observable
     operationVisible = {};
 
     currentTableRow = {};
@@ -147,17 +155,18 @@ export class CommonStore {
 
         runInAction(() => {
 
-            this.columns = json.filter(c => c.hidden != '1' && c.columnType !== 'text').map(c => {
+            this.columns = json.filter(c =>c.hidden!='1' && c.columnType !== 'text').sort((a,b)=>a.columnIndex-b.columnIndex).map(c => {
                 const column = {
                     dataIndex: c.columnName,
                     title: c.text ? c.text : c.columnName,
-                    width: c.width ? c.width : 100
+                    width: c.width ? c.width : 100,
+                    align:'center'
                 };
                 if (c.columnType === 'timestamp') {
                     column.render = (value, record) => moment(value).format('YYYY-MM-DD HH:mm:ss');
                 }
                 if (c.render) {
-                    column.render = eval('(' + c.render + ')').callInstance({React, antd});
+                    column.render = eval('(' + c.render + ')').callInstance({React, antd,get});
                 }
                 if (c.dicGroupId) {
                     const currentDictionary = this.allDictionary.filter(d => d.groupId === c.dicGroupId);
@@ -175,12 +184,22 @@ export class CommonStore {
             });
             this.columns.push({
                 title: '操作',
-                width: 200,
+                width: (()=>{
+                    let width=0;
+                    if(this.currentEntity.editAble == '1') width=140;
+                    this.operations.filter(d => d).filter(d=>d.location=='2').forEach(m=>{
+                        width+=30;
+                        if(m.icon) width+=20;
+                        width+= 10*m.name.length;
+                    });
+                    return width;
+                })(),
+                align:'center',
                 render: (text, record) => {
                     return (
                         <span>
                             {
-                                this.operations.filter(d => d)
+                                this.operations.filter(d => d).filter(d=>d.location=='2')
                                     .map(m => {
                                         if (m.type === '3') {
                                             return (
@@ -243,6 +262,9 @@ export class CommonStore {
                 message: '删除失败'
             });
         }
+        if(this.hasParent || this.currentNode){
+            this.onLoadTreeData(this.currentNode);
+        }
         this.queryTable();
     });
 
@@ -297,13 +319,16 @@ export class CommonStore {
 
     @action
     initTree = async () => {
+        console.log('initTree!!!!');
         let topParentRecord = await get(`${baseUrl}/entity/topParentRecord/${this.currentParentEntity.parentEntityId}`);
+
         //this.queryObj={[this.currentEntity.pidField]:topParentId};
         let json = await post(`${baseUrl}/entity/query/${this.currentParentEntity.id}`, {
             ...this.defaultQueryObj,
             [this.currentParentEntity.idField]: topParentRecord[this.currentParentEntity.idField]
         });
         runInAction(() => {
+            this.expandedKeys=[topParentRecord[this.currentParentEntity.idField]+''];
             this.selectedTreeId = json.data[0][this.currentParentEntity.idField];
             this.treeData = json.data;
             this.setCurrentRoute(topParentRecord[this.currentParentEntity.idField]);
@@ -317,8 +342,15 @@ export class CommonStore {
     };
 
 
+    currentNode;
+
+
     @action
     onLoadTreeData = async (treeNode) => {
+        console.log('onLoadTreeData');
+        if(!this.currentNode){
+           this.currentNode=treeNode;
+        }
         const parentId = treeNode.props.dataRef[this.currentParentEntity.idField];
         let json = await post(`${baseUrl}/entity/query/${this.currentParentEntity.parentEntityId}`, {
             ...this.defaultQueryObj,
@@ -349,6 +381,8 @@ export class CommonStore {
 
     @action
     treeSelect = (selectedKeys, e) => {
+        console.log('treeSelect');
+        this.currentNode= e.node;
         let id = e.node.props.dataRef[this.currentParentEntity.idField];
         this.selectedTreeId = id;
         this.setCurrentRoute(id);

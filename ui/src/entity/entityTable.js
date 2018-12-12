@@ -20,9 +20,7 @@ const Option=Select.Option;
 class EntityTable extends Component {
 
     columns = [
-        {
-            dataIndex: 'id', title: 'ID', width: 50
-        },
+        {dataIndex: 'id', title: 'ID', width: 50,},
         {
             dataIndex: 'tableName', title: '表名', width: 80
         },
@@ -148,7 +146,7 @@ class EntityTable extends Component {
                 <Drawer
                     title={store.currentEntity?store.currentEntity.entityName:''}
                     placement="right"
-                    width={800}
+                    width={1200}
                     zIndex={999}
                     closable={true}
                     maskClosable={false}

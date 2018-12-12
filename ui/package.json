@@ -1,12 +1,12 @@
 {
-  "name": "isp-ui",
+  "name": "ui",
   "version": "1.0.0",
   "description": "isp 项目前端页面",
   "main": "index.js",
-  "author": "bzhcloud",
+  "author": "syu",
   "license": "MIT",
   "dependencies": {
-    "antd": "^3.8.0",
+    "antd": "^3.11.0",
     "axios": "^0.18.0",
     "codemirror": "^5.39.2",
     "echarts": "^4.1.0",

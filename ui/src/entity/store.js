@@ -126,7 +126,8 @@ export class EntityStore {
     loadFilterTableNames=async()=>{
         let json=await get(`${baseUrl}/entity/tableNames`);
         runInAction(()=>{
-            this.tableNames=json.filter(_=>this.entitys.filter(o=>o.tableName===_.tableName).length===0);
+            //this.tableNames=json.filter(_=>this.entitys.filter(o=>o.tableName===_.tableName).length===0);
+            this.tableNames=json;
         });
     };
 
@@ -283,7 +284,6 @@ export class EntityStore {
     };
 
     showOperationTable=(record)=>action(()=>{
-        console.log(record);
         this.currentEntity=record;
         this.toggleOperationTableVisible();
     });

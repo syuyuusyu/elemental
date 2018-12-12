@@ -61,12 +61,24 @@ Function.prototype.replaceArguments=Function.prototype.replaceArguments?Function
             }
     };
 
-// Object.prototype.forEach=Object.prototype.forEach?Object.prototype.forEach:
-//     function(fn){
-//         Object.keys(this).forEach(key=>{
-//             fn(key,this[key]);
-//         })
-//     };
+Function.prototype.callInstance=function(obj){
+    var method=this;
+    return function(){
+        var arg=arguments;
+        return method.apply(obj,arg);
+    }
+};
+
+
+Function.prototype.defer=function(){
+    var method=this;
+    var arg=arguments;
+    return function(time){
+        return new Promise((resolve)=>{
+            setTimeout(()=>resolve(method.apply(this,arg)),time);
+        });
+    }
+};
 
 
 function smartQuery(target, name, descriptor) {
@@ -196,7 +208,6 @@ function careateTree(array,idField,pidField,topId) {
                         if(!arr[i].children){
                             arr[i].children=[];
                         }
-                        console.log(2222,_);
                         arr[i].children.push(_);
                     }
                 }
