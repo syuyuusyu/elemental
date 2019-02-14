@@ -58,6 +58,7 @@ class CommonLayout extends Component {
 
     componentWillUnmount(){
         console.log('componentWillUnmount',  this.props.match.path);
+        this.props.rootStore.commonStore.clean();
 
     }
 
@@ -95,6 +96,7 @@ class CommonLayout extends Component {
             return <div></div>
         }
 
+
         return (
             <Layout style={{height: "100%"}}>
                 {
@@ -110,8 +112,8 @@ class CommonLayout extends Component {
                         :
                         ''
                 }
-                <Content >
-                    <Layout>
+                <Content  style={{height: "100%"}} >
+                    <Layout  style={{height: "100%"}}>
                         <Header style={{ background: '#fff', padding: 5,height:'auto'}}>
                             {
                                 this.createQyeryForm()

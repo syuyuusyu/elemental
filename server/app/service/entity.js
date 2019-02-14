@@ -98,7 +98,7 @@ class EntityService extends Service{
     @smartQuery
     async query(entityId,requestBody){
         console.log(entityId,requestBody);
-        const {entitys,columns}=this.app.entityCache;
+        const {entitys,columns,monyToMony}=this.app.entityCache;
         let entity=entitys.filter(e=>e.id==entityId)[0];
         let entityColumns=columns.filter(c=>c.entityId==entityId);
         if(!entity || entityColumns.length===0){
@@ -118,11 +118,22 @@ class EntityService extends Service{
         for(let i=0;i<foreignColumns.length;i++){
             let fCol=foreignColumns[i];
             values=values+`,${fCol.entity.entityCode}.${fCol.nameCol.columnName} ${fCol.entity.entityCode}_${fCol.nameCol.columnName}`;
-            tables=tables+` join ${fCol.entity.tableName} ${fCol.entity.entityCode} 
+            tables=tables+` left join ${fCol.entity.tableName} ${fCol.entity.entityCode} 
                 on ${entity.entityCode}.${fCol.thisCol.columnName}=${fCol.entity.entityCode}.${fCol.idCol.columnName}`
         }
+        for(let key in requestBody) {
+            if (key.startsWith('mm')) {
+                let eId, mmId;
+                key.replace(/^mm_(\d+)_(\d+)$/,(w,p1,p2)=>{eId=p1,mmId=p2});
+                let en=entitys.filter(e=>e.id==eId)[0];
+                let mm=monyToMony.find(m=>m.id==mmId);
+                let fidField=mm.firstTable==entity.tableName?mm.firstIdField:mm.secondIdField;
+                let sidField=mm.firstTable==en.tableName?mm.firstIdField:mm.secondIdField;
+                tables+=` join ${mm.relationTable} ${mm.relationTable} on ${mm.relationTable}.${fidField}=${entity.entityCode}.${entity.idField}`
+            }
+        }
         let sql=`${values}${tables} where 1=1`;
-        let countSql=`select count(1) total from ${entity.tableName} ${entity.entityCode} where 1=1`;
+        let countSql=`select count(1) total ${tables} where 1=1`;
         let queryValues=[];
         for(let fieldName in requestBody){
             if(fieldName==='start' || fieldName==='pageSize' || fieldName==='page') continue;
@@ -165,13 +176,25 @@ class EntityService extends Service{
             sql+=` and ${entity.entityCode}.${entity.deleteFlagField}='1'`;
             countSql+=` and ${entity.entityCode}.${entity.deleteFlagField}='1'`;
         }
+        for(let key in requestBody) {
+            if (key.startsWith('mm')) {
+                let eId, mmId;
+                key.replace(/^mm_(\d+)_(\d+)$/,(w,p1,p2)=>{eId=p1,mmId=p2});
+                let en=entitys.filter(e=>e.id==eId)[0];
+                let mm=monyToMony.find(m=>m.id==mmId);
+                let fidField=mm.firstTable==entity.tableName?mm.firstIdField:mm.secondIdField;
+                let sidField=mm.firstTable==en.tableName?mm.firstIdField:mm.secondIdField;
+                sql+=` and ${mm.relationTable}.${sidField}=${requestBody[key]}`;
+                countSql+=` and ${mm.relationTable}.${sidField}=${requestBody[key]}`
+            }
+        }
         if(entity.orderField){
             sql+=` order by `;
             entity.orderField.split(',').forEach(key=>{
                 sql+=` ${entity.entityCode}.${key}`;
             });
         }
-
+        console.log(sql);
         let pageQuery=false;
         let [{total}]=await this.app.mysql.query(countSql,queryValues);
         const {start,pageSize}=requestBody;
@@ -209,11 +232,23 @@ class EntityService extends Service{
         let queryValues=[];
         let entityColumns=[];
         let entity;
+        let numKey=(columns,body)=>{
+            for(let key in body){
+                if(/\d+/.test(key)){
+                    let col=columns.find(c=>c.id==key)
+                    if(col){
+                        body[col.columnName]=body[key];
+                    }
+                    delete body[key];
+                }
+            }
+        };
         if(column.foreignKeyId){
             const fidCol=this.app.entityCache.columns.find(c=>c.id===column.foreignKeyId);
             const fnameCol=this.app.entityCache.columns.find(c=>c.id===column.foreignKeyNameId);
             entity=this.app.entityCache.entitys.find(e=>e.id===fidCol.entityId);
             entityColumns=this.app.entityCache.columns.filter(c=>c.entityId===entity.id);
+            numKey(entityColumns,requestBody);
             sql=`select ${fidCol.columnName} value,${fnameCol.columnName} text from ${entity.tableName} ${entity.entityCode} where 1=1`;
             for(let fieldName in requestBody){
                 if(fieldName.endsWith(column.columnName)){
@@ -225,6 +260,7 @@ class EntityService extends Service{
         }else{
             entity=this.app.entityCache.entitys.find(e=>e.id===column.entityId);
             entityColumns=this.app.entityCache.columns.filter(c=>c.entityId===entity.id);
+            numKey(entityColumns,requestBody);
             sql=`select distinct ${column.columnName} value,${column.columnName} text from ${entity.tableName} ${entity.entityCode} where 1=1`;
         }
         for(let fieldName in requestBody){
@@ -323,7 +359,7 @@ class EntityService extends Service{
         if(targetDeleteFlagField){
             sql=sql+` and f.${targetDeleteFlagField}='1'`
         }
-        this.ctx.logger.info(sql);
+        this.ctx.logger.info(sql,[recordId]);
         let result=await this.app.mysql.query(sql,[recordId]);
         return {
             success,
@@ -359,11 +395,12 @@ class EntityService extends Service{
         const updateSuccess = targetIds.length===0 || result.affectedRows === targetIds.length;
         //对入库后的缓存进行刷新
         if (updateSuccess){
-            if (entityId = 1003 && monyToMonyId ==19){
+            console.log(entityId,monyToMonyId);
+            if ((entityId == 1003 || entityId == 1039) && monyToMonyId ==19){
                 //接口调用权限
                 await this.service.authorService.invokePromiss();
             }
-            if (entityId = 1000 && monyToMonyId ==11){
+            if ((entityId == 1000 || entityId == 1001) && monyToMonyId ==11){
                 //用户角色
                 this.service.authorService.actSynUser();
             }
@@ -376,6 +413,14 @@ class EntityService extends Service{
         const sql=`select ${idField} id from ${tableName} where ${pidField} in(?)`;
         await this._child([id],result,sql);
         return result;
+    }
+
+    async _child(currentIds,result,sql){
+        const ids =await this.app.mysql.query(sql,[currentIds]);
+        if(ids.length>0){
+            ids.forEach(_=>result.push(_.id));
+            await this._child(ids.map(o=>o.id),result,sql);
+        }
     }
 
 }
