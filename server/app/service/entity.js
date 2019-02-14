@@ -394,17 +394,6 @@ class EntityService extends Service{
         }
         const updateSuccess = targetIds.length===0 || result.affectedRows === targetIds.length;
         //对入库后的缓存进行刷新
-        if (updateSuccess){
-            console.log(entityId,monyToMonyId);
-            if ((entityId == 1003 || entityId == 1039) && monyToMonyId ==19){
-                //接口调用权限
-                await this.service.authorService.invokePromiss();
-            }
-            if ((entityId == 1000 || entityId == 1001) && monyToMonyId ==11){
-                //用户角色
-                this.service.authorService.actSynUser();
-            }
-        }
         return {success:updateSuccess};
     }
 
