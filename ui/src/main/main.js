@@ -8,6 +8,7 @@ import {NavLink, Switch, Route, Redirect, withRouter} from 'react-router-dom';
 import {Login} from '../login';
 import MenuTree from './menuTree';
 import {Home} from '../home';
+import ModifyUserForm from '../modifyUserInfo/modifyUserForm'
 
 
 
@@ -62,6 +63,9 @@ class Main extends Component {
         const {winWidth, winHeight, headerHeight, menuHeight, footerHeight} = treeStore;
         const userOperations = (
             <ul className="popover-list">
+                <li>
+                    <Icon type="profile"/>&nbsp;&nbsp; <Link to="/modifyUser">修改用户信息</Link>
+                </li>
                 <li onClick={this.props.rootStore.authorityStore.logout}>
                     <Icon type="poweroff"/>&nbsp;&nbsp; 退出
                 </li>
@@ -104,6 +108,7 @@ class Main extends Component {
                     <Route exact path="/" render={() => <Redirect to="/home"/>}/>
                     <Route exact path="/login" render={() => <Redirect to="/home"/>}/>
                     <Route exact path="/home" component={Home}/>
+                    <Route exact path="/modifyUser" component={ModifyUserForm}/>
                     {
                         this.props.rootStore.treeStore.currentRoleMenu
                             .filter(d => d)

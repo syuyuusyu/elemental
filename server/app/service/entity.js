@@ -101,6 +101,7 @@ class EntityService extends Service{
         const {entitys,columns,monyToMony}=this.app.entityCache;
         let entity=entitys.filter(e=>e.id==entityId)[0];
         let entityColumns=columns.filter(c=>c.entityId==entityId);
+
         if(!entity || entityColumns.length===0){
             return {
                 success:false
@@ -118,8 +119,16 @@ class EntityService extends Service{
         for(let i=0;i<foreignColumns.length;i++){
             let fCol=foreignColumns[i];
             values=values+`,${fCol.entity.entityCode}.${fCol.nameCol.columnName} ${fCol.entity.entityCode}_${fCol.nameCol.columnName}`;
-            tables=tables+` left join ${fCol.entity.tableName} ${fCol.entity.entityCode} 
-                on ${entity.entityCode}.${fCol.thisCol.columnName}=${fCol.entity.entityCode}.${fCol.idCol.columnName}`
+            tables=tables+` left join ${fCol.entity.tableName} ${fCol.entity.entityCode}
+                on ${entity.entityCode}.${fCol.thisCol.columnName}=${fCol.entity.entityCode}.${fCol.idCol.columnName}`;
+            //当外键对应表为树结构时查询树节点下所有的ID
+            let fEntity=foreignColumns[i].entity;
+            if(fEntity.parentEntityId && fEntity.id==fEntity.parentEntityId){
+                if(requestBody[fCol.thisCol.columnName]){
+                    let ids=await this.childList(requestBody[fCol.thisCol.columnName],fEntity.idField,fEntity.pidField,fEntity.tableName);
+                    requestBody[fCol.thisCol.columnName]=ids;
+                }
+            }
         }
         for(let key in requestBody) {
             if (key.startsWith('mm')) {
@@ -155,9 +164,9 @@ class EntityService extends Service{
             });
             if(!entityColumns.find(c=>c.columnName===fieldName)) continue;
             if(entityColumns.find(c=>c.columnName===fieldName).columnType==='timestamp'){
-                sql+=` and ${entity.entityCode}.${fieldName} 
+                sql+=` and ${entity.entityCode}.${fieldName}
                     BETWEEN '${requestBody[fieldName][0]}' and '${requestBody[fieldName][1]}'`;
-                countSql+=` and ${entity.entityCode}.${fieldName} 
+                countSql+=` and ${entity.entityCode}.${fieldName}
                     BETWEEN '${requestBody[fieldName][0]}' and '${requestBody[fieldName][1]}'`;
                 continue;
             }
@@ -194,7 +203,6 @@ class EntityService extends Service{
                 sql+=` ${entity.entityCode}.${key}`;
             });
         }
-        console.log(sql);
         let pageQuery=false;
         let [{total}]=await this.app.mysql.query(countSql,queryValues);
         const {start,pageSize}=requestBody;
@@ -283,7 +291,7 @@ class EntityService extends Service{
             });
             if(!entityColumns.find(c=>c.columnName===fieldName)) continue;
             if(entityColumns.find(c=>c.columnName===fieldName).columnType==='timestamp'){
-                sql+=` and ${entity.entityCode}.${fieldName} 
+                sql+=` and ${entity.entityCode}.${fieldName}
                     BETWEEN '${requestBody[fieldName][0]}' and '${requestBody[fieldName][1]}'`;
                 continue;
             }
@@ -305,7 +313,7 @@ class EntityService extends Service{
 
     async checkUnique(entityId,checkField,value){
         const entity=this.app.entityCache.entitys.find(e=>e.id==entityId);
-        let sql=`select count(${checkField}) total from ${entity.tableName} where 
+        let sql=`select count(${checkField}) total from ${entity.tableName} where
             ${checkField}=?`;
         if(entity.deleteFlagField){
             sql=sql+` and ${entity.deleteFlagField}=1`;
@@ -353,7 +361,7 @@ class EntityService extends Service{
         if(!success){
             return {success};
         }
-        let sql=`select f.* from ${targetTableName} f 
+        let sql=`select f.* from ${targetTableName} f
             join ${relevantTableName} m on m.${r_targetIdField}=f.${targetIdField}
             join ${srcTableName} s on m.${r_srcIdField}=s.${srcIdField} where s.${srcIdField}=?`;
         if(targetDeleteFlagField){
@@ -381,7 +389,7 @@ class EntityService extends Service{
                 [r_srcIdField]: srcId,
             });  // 第一步操作
             if(targetIds.length>0){
-                let sql=`insert into ${relevantTableName}(${r_srcIdField},${r_targetIdField}) 
+                let sql=`insert into ${relevantTableName}(${r_srcIdField},${r_targetIdField})
                     values ${targetIds.map((a)=>'('+srcId+','+a+')').reduce((a,b)=>a+','+b)}`;
                 console.log(sql);
                 result=await conn.query(sql);  // 第二步操作
@@ -393,7 +401,6 @@ class EntityService extends Service{
             throw err;
         }
         const updateSuccess = targetIds.length===0 || result.affectedRows === targetIds.length;
-        //对入库后的缓存进行刷新
         return {success:updateSuccess};
     }
 
