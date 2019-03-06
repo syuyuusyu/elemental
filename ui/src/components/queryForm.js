@@ -278,7 +278,7 @@ class QueryForm extends React.Component {
                                             }
                                         }
                                     })
-                                    .map(_=><Option key={_.value} value={_.value+''}>{_.text}</Option>)
+                                    .map((_,index)=><Option key={_.value+index} value={_.value+''}>{_.text}</Option>)
                             }
                         </Select>
                     )}
@@ -316,7 +316,6 @@ class QueryForm extends React.Component {
                 );
             }
         }
-
         return (
             <FormItem style={{marginBottom: '5px'}} key={col.id}
                       label={col.text ? col.text : col.columnName} {...formItemLayout}>
@@ -324,12 +323,20 @@ class QueryForm extends React.Component {
                     <AutoComplete
                         onSearch={this.handleSearch(col.columnName)}
                         onSelect={this.onSelect(col.id)}
-                        dataSource={this.state[`filter${col.columnName}`].map((_,index)=> {
-                            if (_.value)
-                                return <Option style={{whiteSpace:'normal',wordWrap:'break-word',wordBreak:'break-all'}} key={index} value={_.value + ''}>{_.text}</Option>
-                            else
-                                return <Option key={index+Math.random()} value={''} style={{color: 'white'}}>&nbsp;</Option>
-                        })}
+                        //allowClear={true}
+                        // dataSource={this.state[`filter${col.columnName}`].map((_,index)=> {
+                        //     if (_.value)
+                        //         return <Option style={{whiteSpace:'normal',wordWrap:'break-word',wordBreak:'break-all'}} key={index} value={_.value + ''}>{_.text}</Option>
+                        //     else{
+                        //         return <Option key={index} value={''} style={{color: 'white'}}>&nbsp;</Option>
+                        //     }
+                        //
+                        // })}
+                        dataSource={[<Option key={-1} value={''} style={{color: 'white'}}>&nbsp;</Option>]
+                            .concat(this.state[`filter${col.columnName}`].filter(_=>_.value).map((_,index)=>
+                                <Option style={{whiteSpace:'normal',wordWrap:'break-word',wordBreak:'break-all'}} key={index} value={_.value + ''}>{_.text}</Option>
+
+                        ))}
                     >
                         <Input/>
                     </AutoComplete>
@@ -369,8 +376,6 @@ class QueryForm extends React.Component {
                 }
             </Row>
         );
-
-
 
     };
 
@@ -438,4 +443,3 @@ class QueryForm extends React.Component {
 }
 
 export default QueryForm;
-
