@@ -10,7 +10,7 @@ server/run/
 server/.DS_Store
 server/*.sw*
 server/*.un~
-
+*.DS_Store
 
 
 
