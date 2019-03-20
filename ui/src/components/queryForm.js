@@ -38,6 +38,7 @@ class QueryForm extends React.Component {
         const store = this.props.rootStore.commonStore;
         const queryFieldIds=store.currentEntity.queryField?store.currentEntity.queryField.split(','):[];
         const mmQueryFieldIds=store.currentEntity.mmQueryField?store.currentEntity.mmQueryField.split(','):[];
+        const fuzzyQueryFieldIds=store.currentEntity.fuzzyQueryField?store.currentEntity.fuzzyQueryField.split(','):[];
         this.queryColumn=queryFieldIds.map(id=>store.allColumns.find(_=>_.id===parseInt(id))).map(_=>({..._,type:'field'}));
         if(mmQueryFieldIds.length>0){
             this.queryColumn=this.queryColumn.concat(mmQueryFieldIds.map(id=>store.allEntitys.find(_=>_.id===parseInt(id))).map(
@@ -54,6 +55,11 @@ class QueryForm extends React.Component {
                     return {...e,type:'mm',mm:mony}
                 }
             ));
+        }
+        if(fuzzyQueryFieldIds.length>0){
+            this.queryColumn=this.queryColumn.concat(
+                fuzzyQueryFieldIds.map(id=>store.allColumns.find(_=>_.id===parseInt(id))).map(_=>({..._,type:'fuzzy'}))
+            );
         }
         this.setCandidate();
 
@@ -93,7 +99,7 @@ class QueryForm extends React.Component {
                 json.unshift({value:null,text:null});
                 this.setState({[col.columnName]:json});
                 this.setState({[`filter${col.columnName}`]:json});
-            }else{
+            }else if(col.type=='mm'){
                 this.state[col.tableName]=[];
                 if(col.parentEntityId && col.parentEntityId==col.id){
                     let topParentRecord = await get(`${baseUrl}/entity/topParentRecord/${col.parentEntityId}`);
@@ -248,6 +254,18 @@ class QueryForm extends React.Component {
         }
     };
 
+    createfuzzyItem=(col)=>{
+        const {getFieldDecorator,} = this.props.form;
+        return (
+            <FormItem style={{marginBottom: '5px'}} key={col.id}
+                      label={col.text ? col.text : col.columnName} {...formItemLayout}>
+                {getFieldDecorator('fuzzy_'+col.columnName, {})(
+                    <Input placeholder="输入信息将模糊匹配" />
+                )}
+            </FormItem>
+        );
+    };
+
     createItem=(col)=>{
         const store = this.props.rootStore.commonStore;
         const {getFieldDecorator,} = this.props.form;
@@ -365,8 +383,10 @@ class QueryForm extends React.Component {
                                 row.map(col=>{
                                     if(col.type=='field'){
                                         return this.createItem(col);
-                                    }else {
+                                    }else if(col.type=='mm'){
                                         return this.createMMItem(col);
+                                    }else if(col.type=='fuzzy'){
+                                        return this.createfuzzyItem(col);
                                     }
 
                                 })

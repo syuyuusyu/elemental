@@ -162,6 +162,12 @@ class EntityService extends Service{
                     prefix=_;
                 }
             });
+            if(fieldName.startsWith('fuzzy_')){
+                let fname=fieldName.replace(/^fuzzy_(\w+)/,"$1");
+                if(!entityColumns.find(c=>c.columnName===fname)) continue;
+                sql+=` and ${entity.entityCode}.${fname} like '%${requestBody[fieldName]}%'`;
+                countSql+=` and ${entity.entityCode}.${fname} like '%${requestBody[fieldName]}%'`;
+            }
             if(!entityColumns.find(c=>c.columnName===fieldName)) continue;
             if(entityColumns.find(c=>c.columnName===fieldName).columnType==='timestamp'){
                 sql+=` and ${entity.entityCode}.${fieldName}
