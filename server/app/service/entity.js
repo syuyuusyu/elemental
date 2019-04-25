@@ -114,12 +114,12 @@ class EntityService extends Service{
             idCol:columns.find(c=>c.id===d.foreignKeyId),
             nameCol:columns.find(c=>c.id===d.foreignKeyNameId)
         }));
-        let values=`select ${entity.entityCode}.*`;
+        let values=`select distinct ${entity.entityCode}.*`;
         let tables=` from ${entity.tableName} ${entity.entityCode} `;
         for(let i=0;i<foreignColumns.length;i++){
             let fCol=foreignColumns[i];
             values=values+`,${fCol.entity.entityCode}.${fCol.nameCol.columnName} ${fCol.entity.entityCode}_${fCol.nameCol.columnName}`;
-            tables=tables+` left join ${fCol.entity.tableName} ${fCol.entity.entityCode}
+            tables=tables+` left join ${fCol.entity.tableName} ${fCol.entity.entityCode} 
                 on ${entity.entityCode}.${fCol.thisCol.columnName}=${fCol.entity.entityCode}.${fCol.idCol.columnName}`;
             //当外键对应表为树结构时查询树节点下所有的ID
             let fEntity=foreignColumns[i].entity;
@@ -138,11 +138,11 @@ class EntityService extends Service{
                 let mm=monyToMony.find(m=>m.id==mmId);
                 let fidField=mm.firstTable==entity.tableName?mm.firstIdField:mm.secondIdField;
                 let sidField=mm.firstTable==en.tableName?mm.firstIdField:mm.secondIdField;
-                tables+=` join ${mm.relationTable} ${mm.relationTable} on ${mm.relationTable}.${fidField}=${entity.entityCode}.${entity.idField}`
+                tables+=` left join ${mm.relationTable} ${mm.relationTable} on ${mm.relationTable}.${fidField}=${entity.entityCode}.${entity.idField}`
             }
         }
         let sql=`${values}${tables} where 1=1`;
-        let countSql=`select count(1) total ${tables} where 1=1`;
+        let countSql=`select count(distinct ${entity.entityCode}.${entity.idField}) total ${tables} where 1=1`;
         let queryValues=[];
         for(let fieldName in requestBody){
             if(fieldName==='start' || fieldName==='pageSize' || fieldName==='page') continue;
@@ -170,9 +170,9 @@ class EntityService extends Service{
             }
             if(!entityColumns.find(c=>c.columnName===fieldName)) continue;
             if(entityColumns.find(c=>c.columnName===fieldName).columnType==='timestamp'){
-                sql+=` and ${entity.entityCode}.${fieldName}
+                sql+=` and ${entity.entityCode}.${fieldName} 
                     BETWEEN '${requestBody[fieldName][0]}' and '${requestBody[fieldName][1]}'`;
-                countSql+=` and ${entity.entityCode}.${fieldName}
+                countSql+=` and ${entity.entityCode}.${fieldName} 
                     BETWEEN '${requestBody[fieldName][0]}' and '${requestBody[fieldName][1]}'`;
                 continue;
             }
@@ -199,8 +199,18 @@ class EntityService extends Service{
                 let mm=monyToMony.find(m=>m.id==mmId);
                 let fidField=mm.firstTable==entity.tableName?mm.firstIdField:mm.secondIdField;
                 let sidField=mm.firstTable==en.tableName?mm.firstIdField:mm.secondIdField;
-                sql+=` and ${mm.relationTable}.${sidField}=${requestBody[key]}`;
-                countSql+=` and ${mm.relationTable}.${sidField}=${requestBody[key]}`
+                //对端表为树结构
+                if(en.parentEntityId && en.id==en.parentEntityId){
+                    let id=requestBody[key];
+                    let ids=await this.childList(id,en.idField,en.pidField,en.tableName);
+                    requestBody[key]=ids;
+                    sql+=` and ${mm.relationTable}.${sidField} in (${requestBody[key]})`;
+                    countSql+=` and ${mm.relationTable}.${sidField} in(${requestBody[key]})`
+                }else{
+                    sql+=` and ${mm.relationTable}.${sidField}=${requestBody[key]}`;
+                    countSql+=` and ${mm.relationTable}.${sidField}=${requestBody[key]}`
+                }
+
             }
         }
         if(entity.orderField){
@@ -307,7 +317,7 @@ class EntityService extends Service{
                 }
             }
             if(currentColumn.columnType==='timestamp'){
-                sql+=` and ${entity.entityCode}.${fieldName}
+                sql+=` and ${entity.entityCode}.${fieldName} 
                     BETWEEN '${requestBody[fieldName][0]}' and '${requestBody[fieldName][1]}'`;
                 continue;
             }
@@ -329,7 +339,7 @@ class EntityService extends Service{
 
     async checkUnique(entityId,checkField,value){
         const entity=this.app.entityCache.entitys.find(e=>e.id==entityId);
-        let sql=`select count(${checkField}) total from ${entity.tableName} where
+        let sql=`select count(${checkField}) total from ${entity.tableName} where 
             ${checkField}=?`;
         if(entity.deleteFlagField){
             sql=sql+` and ${entity.deleteFlagField}=1`;
@@ -339,10 +349,30 @@ class EntityService extends Service{
     }
 
     async saveEntity(entityId,requestBody){
+        console.log(requestBody);
         const entity=this.app.entityCache.entitys.find(e=>e.id==entityId);
-        let result = await this.app.mysql[requestBody[entity.idField]?'update':'insert'](entity.tableName, requestBody);
+        const method=requestBody[entity.idField]?'update':'insert';
+        let result = await this.app.mysql[method](entity.tableName, requestBody);
         // 判断更新成功
         const updateSuccess = result.affectedRows === 1;
+
+        //处理不同实体的特殊情况
+        if(updateSuccess){
+            if(method=='insert'){
+                const insertId=result.insertId;
+                if (entityId == 1028){
+                    //更新机构层级
+                    let [ {hierarchy}]= await this.app.mysql.query(`select hierarchy from t_organization where id=?`,[requestBody.parent_id]);
+                    this.app.mysql.update('t_organization',{hierarchy:hierarchy+1,id:insertId});
+                }
+                if (entityId == 1045){
+                    //跟新区划层级
+                    let [ {hierarchy}]= await this.app.mysql.query(`select hierarchy from t_gov_area where id=?`,[requestBody.pid]);
+                    this.app.mysql.update('t_gov_area',{hierarchy:hierarchy+1,id:insertId});
+                }
+            }
+
+        }
         return {success:updateSuccess};
     }
 
@@ -377,7 +407,7 @@ class EntityService extends Service{
         if(!success){
             return {success};
         }
-        let sql=`select f.* from ${targetTableName} f
+        let sql=`select f.* from ${targetTableName} f 
             join ${relevantTableName} m on m.${r_targetIdField}=f.${targetIdField}
             join ${srcTableName} s on m.${r_srcIdField}=s.${srcIdField} where s.${srcIdField}=?`;
         if(targetDeleteFlagField){
@@ -405,7 +435,7 @@ class EntityService extends Service{
                 [r_srcIdField]: srcId,
             });  // 第一步操作
             if(targetIds.length>0){
-                let sql=`insert into ${relevantTableName}(${r_srcIdField},${r_targetIdField})
+                let sql=`insert into ${relevantTableName}(${r_srcIdField},${r_targetIdField}) 
                     values ${targetIds.map((a)=>'('+srcId+','+a+')').reduce((a,b)=>a+','+b)}`;
                 console.log(sql);
                 result=await conn.query(sql);  // 第二步操作
@@ -419,7 +449,14 @@ class EntityService extends Service{
         const updateSuccess = targetIds.length===0 || result.affectedRows === targetIds.length;
         //对入库后的缓存进行刷新
         if (updateSuccess){
-
+            if ((entityId == 1003 || entityId == 1039) && monyToMonyId ==19){
+                //接口调用权限
+                await this.service.authorService.invokePromiss();
+            }
+            if ((entityId == 1000 || entityId == 1001) && monyToMonyId ==11){
+                //用户角色
+                this.service.authorService.actSynUser();
+            }
         }
         return {success:updateSuccess};
     }

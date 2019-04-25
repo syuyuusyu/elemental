@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Form, Divider, Popconfirm, Table, Modal, Row, Col,Button,Drawer,Select,notification,Card} from 'antd';
+import {Form, Divider, Popconfirm, Table, Modal, Row, Col,Button,Drawer,Select,notification,Card,List} from 'antd';
 import {inject, observer} from 'mobx-react';
 import {baseUrl, dateFtt, format, get} from '../util';
 import CreateForm from './createForm';
@@ -25,7 +25,6 @@ class CommonTable extends Component{
     componentWillMount(){
         const store=this.props.rootStore.commonStore;
         store.loadColumns();
-        //this.entityColumns=store.allColumns.filter(c=>c.entityId===store.currentEntity.id && c.hidden!=='1');
         this.textColumns=store.allColumns.filter(c=>c.entityId===store.currentEntity.id && c.hidden!=='1')
             .filter(c=>c.columnType==='text');
         this.textColumnsLen=this.textColumns.length;
@@ -145,6 +144,7 @@ class CommonTable extends Component{
             <div >
                 <Modal visible={store.createFormVisible}
                        width={800}
+                       //mask={false}
                        title="新建"
                        footer={null}
                        onCancel={store.toggleCreateFormVisible}
@@ -156,6 +156,31 @@ class CommonTable extends Component{
                 {
                     store.operations.filter(o=>o.type!=='3').map(o=>this.createOperationPage(o))
                 }
+                <Drawer
+                    placement="left"
+                    width={600}
+                    closable={false}
+                    onClose={store.infoClose}
+                    visible={store.infoVisible}
+                >
+                    <List
+                        itemLayout="horizontal"
+                        dataSource={store.infoArr.filter(d=>d)}
+                        renderItem={item => (
+                            <List.Item>
+                                <List.Item.Meta
+                                    title={item.title}
+                                    description={
+                                        item.type=='text'?
+                                            <pre>{format(item.value)}</pre>
+                                            :
+                                            item.value
+                                    }
+                                />
+                            </List.Item>
+                        )}
+                    />
+                </Drawer>
                 <Table
                        columns={store.columns.filter(d=>d)}
                        rowKey={record => record[store.currentEntity.idField]}
@@ -165,8 +190,8 @@ class CommonTable extends Component{
                        scroll={{y: 800,x:xscroll}}
                        pagination={store.pagination}
                        loading={store.loading}
-                       expandedRowRender={store.allColumns.filter(c=>c.entityId===store.currentEntity.id && c.columnType==='text').length>0?
-                           this.expandedRowRender:null}
+                       // expandedRowRender={store.allColumns.filter(c=>c.entityId===store.currentEntity.id && c.columnType==='text').length>0?
+                       //     this.expandedRowRender:null}
                 />
             </div>
         );
